@@ -1,0 +1,39 @@
+Personas
+
+- Astrologist
+Interested for star signs. 
+Robert is a 45-year old astrologist living in Austin, Texas. He’s grown from an aspiring physics student to an experienced astrological researcher with years of experience.
+
+While knowledgable in the math and physics behind his research, he’s had a hard time using new powerful software that his peers have been using. He looks online to find Stargazer. He finds a balance between convenience and usefulness using this tool. He’s able to use it as a reference without becoming overwhelmed by the site itself.
+
+- High Schooler
+Interested for personal education. 
+Cara is a 15-year old high school student living in White Plains, NY. She’s always had a proclivity towards physics and astronomy. She’s in the astronomy club and attends meetings every Thursday ofter 3 pm.
+
+One day, the club coordinator shares Stargazer with the everyone in the astronomy club. Cara is fascinated in experimenting with how time and position affects one’s relative view of the stars. 
+
+- High School teacher
+Interested in Classroom education 
+Jenna is a 30-year old high school teacher in Cleveland, Ohio.She is constantly looking for ways to elevate her student’s understanding of the material. While some tend to understand, others are still left confused about how everything connects.
+
+Jenna tries to find a way to visualize the material, while also making it engaging. She looks up Stargazer and tries it out with her students. She lets all of her students see constellations and planets from different points of views from Earth. She finds her students being more engaging and curious about constellations and why they appear the way that they do. 
+
+- Astronomy student
+Personal education or work. 
+George is a 19 year old sophomore attending Temple University. He’s a physics major that has trouble grasping certain concepts. While good with math, other physics classes tend to confuse him unless he uses another tool alongside it to help him understand.
+
+George decided to take astronomy and immediately started having trouble grasping certain concepts. He looks online and finds Stargazer. The visual elements of the site gives him what he needs in order to grasp certain concepts. 
+
+- Amateur Photographer (Joshua Slootsky)
+Interested in photographing constellations
+Jake is a 25-year-old software engineer living in Denver, Colorado, who has a passion for the outdoors and photography. He grew up in Flagstaff, Arizona, a small mountain town known for its dark skies and proximity to observatories. As a kid, Jake often went camping with his family, where he would lie under the stars and listen to his dad point out constellations. 
+After studying computer science in college, Jake moved to Denver to pursue a career in software engineering while staying close to the outdoors he loves. After getting a bonus at work, he bought a wide-angle lens to capture the Milky Way and the constellations that fascinated him growing up. While planning for a weekend trip to a nearby park, 
+Jake opens Stargazer on his laptop and enters his planned location and time. The site provides him with a list of visible constellations and the best direction to point his camera.
+
+
+- A graphic designed interested in Horoscope and Astrology(Kidus Adamte)
+Luna, age 27, is a graphic designer living in Portland, Oregon. She works remotely for a lifestyle and wellness brand, creating social media content and visual identities for small businesses. Luna grew up in Santa Fe, New Mexico, in a family that valued creativity and spirituality .
+She studied Fine Arts for her undergraduate and became fascinated by the intersection of symbolism, mythology, and self-expression. In her free time, she reads astrology blogs, listens to horoscope podcasts, and follows popular astrologers on social media. She often checks her birth chart and tracks the moon phases to guide her reflections and creative decisions.
+Luna enjoys stargazing from her apartment balcony but often wishes she could better identify the constellations connected to her zodiac sign. She loves the idea of blending the mystical and the scientific          understanding of what's really visible in the night sky while still connecting it to her sense of identity and meaning.
+
+
