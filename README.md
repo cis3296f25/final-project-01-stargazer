@@ -1,6 +1,12 @@
-# Project Name
-Put here a short paragraph describing your project. 
-Adding an screenshot or a mockup of your application in action would be nice.  
+Star Gazer
+Star Gazer is an interactive web app that lets users explore the night sky from any point in time and space. Whether you’re curious about what the stars looked like on your birthday, during a historical event, or at a future date, Star Gazer brings the cosmos to your fingertips.
+The app provides:
+🌠 Real-time celestial visualization – view constellations, planets, and stars as they appeared at a chosen date and location.
+♈ Astrological insights – discover zodiac constellations and horoscope alignments associated with specific times.
+🗺️ Interactive map interface – easily select global locations and times using an intuitive, responsive design.
+📱 Educational and personal use – perfect for astronomy enthusiasts, students, or anyone interested in the connection between the stars and human experience.
+Built with modern web technologies for performance and clarity, Star Gazer aims to make stargazing accessible, visual, and meaningful — all from your browser.
+
 
 ![This is a screenshot.](mockup.png)
 # How to run
