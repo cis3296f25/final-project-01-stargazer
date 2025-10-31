@@ -32,3 +32,10 @@ Follow this project board to know the latest status of the project: [http://...]
 - Specify additional library to download if needed 
 - What file and target to compile and run. 
 - What is expected to happen when the app start. 
+
+
+FOR individuals who are fascinated by the night sky, astrology, and the connection between cosmic events and personal meaning,
+WHO want an accessible and visually engaging way to explore how the stars and planets aligned at specific moments in time,
+THE Star Gazer is an interactive web application that allows users to visualize celestial arrangements and discover astrological insights for any chosen date and location.
+UNLIKE traditional astronomy software or generic horoscope websites,
+OUR PRODUCT combines real-time astronomical data with elegant, user-friendly design to create an immersive experience that bridges science, art, and personal reflection.
