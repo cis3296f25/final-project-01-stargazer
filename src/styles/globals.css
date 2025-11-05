@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-background: #050816;
+  --color-surface: rgba(16, 24, 48, 0.85);
+  --color-surface-alt: 25 33 62;
+  --color-accent: 75 123 245;
+  --color-accent-muted: rgba(75, 123, 245, 0.65);
+  --color-text-primary: #f5f8ff;
+  --color-text-secondary: 229 233 255;
+  --color-success: #47d7ac;
+  --color-warning: #f5c552;
+  --color-danger: #f05d7b;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --radius-lg: 24px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --grid-gap: 24px;
+}
+
+body {
+  @apply min-h-screen font-sans bg-background text-textPrimary antialiased;
+  background-image: radial-gradient(circle at 20% 20%, rgba(75, 123, 245, 0.25), transparent 60%),
+    radial-gradient(circle at 80% 10%, rgba(116, 173, 255, 0.2), transparent 60%),
+    radial-gradient(circle at 50% 80%, rgba(86, 123, 255, 0.15), transparent 60%),
+    linear-gradient(180deg, rgba(6, 9, 24, 0.9), rgba(3, 4, 12, 1));
+}
+
+a {
+  @apply text-accent underline;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.glass-panel {
+  @apply backdrop-blur-xl bg-surface border border-[var(--color-border)] shadow-xl;
+}
+
+.button-primary {
+  @apply inline-flex items-center justify-center rounded-xl bg-accent px-6 py-3 font-medium text-white transition hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent;
+}
+
+.field-label {
+  @apply text-sm font-medium text-textSecondary uppercase tracking-wide;
+}
+
+.field-input {
+  @apply mt-2 w-full rounded-lg border border-transparent bg-surfaceAlt/60 px-4 py-3 text-base text-textPrimary placeholder:text-textSecondary/60 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/70;
+}
+
+.section-title {
+  @apply text-lg font-semibold text-textPrimary;
+}
