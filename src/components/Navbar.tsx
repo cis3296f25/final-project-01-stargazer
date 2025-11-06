@@ -48,7 +48,7 @@ export function Navbar({ onRefresh }: NavbarProps) {
         </div>
       </div>
       <div className="flex flex-col items-stretch gap-4 md:flex-row md:items-center">
-        <div className="flex flex-col text-xs uppercase tracking-wide text-textSecondary/70 md:w-60">
+        <div className="flex flex-col text-xs uppercase tracking-wide text-textSecondary/70 md:w-80">
           <span className="mb-1 flex items-center gap-2 text-textSecondary">
             <CalendarClock className="h-4 w-4 text-accent" aria-hidden />
             Observation time
