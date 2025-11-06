@@ -2,6 +2,8 @@
 Testing File for stargazer
 '''
 
+#to run tests, type pytest -v in the terminal while in the root directory
+
 #To run tests with coverage, install pytest-cov (pip install pytest-cov)
 #run pytest --cov=stargazer --cov-report=term-missing
     #--cov=stargazer specifies the module to measure coverage for
