@@ -20,7 +20,7 @@ Built with modern web technologies for performance and clarity, Star Gazer aims 
    npm install
    ```
    > If your network restricts direct npm registry access, configure an internal proxy or mirror before installing.
-   > If you receive an error "npm not recognize" install node.js from [Download Node.js](https://nodejs.org/en/download)
+   > If you receive an error "npm not recognize" install node.js from [Node.js](https://nodejs.org/en/download)
 
 2. **Environment variables**
    Create a `.env` file based on `.env.example` and set your keys:
