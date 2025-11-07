@@ -23,17 +23,18 @@ Built with modern web technologies for performance and clarity, Star Gazer aims 
    ```
    `VITE_API_BASE_URL` is optional—when omitted the dev server proxies `/api` to `http://localhost:5000`.
 
-3. **Start the dev server**
+3. **Start the flask backend**
+   On a separate 
+```
+   python stargazer.py
+   ```
+
+4. **Start the dev server**
    ```bash
    npm run dev
    ```
    Open the printed URL (default `http://localhost:5173`). Requests to `/api` are proxied to the Flask backend to avoid CORS issues.
 
-4. **Build for production**
-   ```bash
-   npm run build
-   npm run preview
-   ```
 
 ## Folder Structure
 
