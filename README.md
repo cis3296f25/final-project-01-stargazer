@@ -9,6 +9,12 @@ Built with modern web technologies for performance and clarity, Star Gazer aims 
 
 ## How to run
 
+0. **Clone this repo into a directory**
+
+   ```
+   git clone https://github.com/cis3296f25/final-project-01-stargazer.git
+   ```
+
 1. **Install dependencies**
    ```bash
    npm install
@@ -24,7 +30,7 @@ Built with modern web technologies for performance and clarity, Star Gazer aims 
    `VITE_API_BASE_URL` is optional—when omitted the dev server proxies `/api` to `http://localhost:5000`.
 
 3. **Start the flask backend**
-   On a separate terminal
+   On a separate terminal in the same directory
    ```
    python stargazer.py
    ```
