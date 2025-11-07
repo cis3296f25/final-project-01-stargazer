@@ -13,7 +13,7 @@ export function FullscreenMap({ coordinates, onCenterChange }: FullscreenMapProp
   const center = useMemo(() => ({ lat: coordinates.lat, lng: coordinates.lon }), [coordinates.lat, coordinates.lon]);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    id: 'stargazer-map-full',
+    id: 'stargazer-map',
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? ''
   });
 
