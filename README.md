@@ -20,6 +20,7 @@ Built with modern web technologies for performance and clarity, Star Gazer aims 
    npm install
    ```
    > If your network restricts direct npm registry access, configure an internal proxy or mirror before installing.
+   > If you receive an error "npm not recognize" install node.js from [Download Node.js](https://nodejs.org/en/download)
 
 2. **Environment variables**
    Create a `.env` file based on `.env.example` and set your keys:
@@ -52,10 +53,7 @@ src/
   lib/            # API client, formatting helpers, and utilities
   pages/          # Routed screens (landing, minimized map, fullscreen map)
   styles/         # Tailwind globals and design tokens
-```
-
-# How to contribute
-Follow this project board to know the latest status of the project: [http://...]([http://...])  
+``` 
 
 ### How to build
 - Use this github repository: ... 
