@@ -10,6 +10,7 @@ from flask import Flask, request, jsonify
 from skyfield.api import Loader, wgs84
 from flask_cors import CORS
 
+
 load = Loader('~/skyfield-data')
 ts = load.timescale()
 eph = load('de440s.bsp')
@@ -17,6 +18,7 @@ eph = load('de440s.bsp')
 EARTH = eph['earth']
 SUN = eph['sun']
 MOON = eph['moon']
+
 
 PLANETS = {
     'Mercury': eph['mercury barycenter'],
@@ -43,7 +45,10 @@ def moon_phase_fraction(t) -> float:
     e = EARTH.at(t)
     sun, moon = e.observe(SUN).apparent(), e.observe(MOON).apparent()
     phase_angle = moon.separation_from(sun).radians
-    return (1 + cos(phase_angle)) / 2.0
+    #return (1 + cos(phase_angle)) / 2.0 old
+    return (1 - cos(phase_angle)) / 2.0 #new. moon phase fraction: 0=new, 1=full. full expects 1.0
+
+
 
 def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: datetime, twilight: str) -> Dict:
     t = ts.from_datetime(when_utc)
