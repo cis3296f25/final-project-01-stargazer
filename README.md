@@ -24,8 +24,8 @@ Built with modern web technologies for performance and clarity, Star Gazer aims 
    `VITE_API_BASE_URL` is optional—when omitted the dev server proxies `/api` to `http://localhost:5000`.
 
 3. **Start the flask backend**
-   On a separate 
-```
+   On a separate terminal
+   ```
    python stargazer.py
    ```
 
