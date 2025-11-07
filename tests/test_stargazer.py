@@ -36,7 +36,9 @@ def test_moon_phase_fraction_fullish():
     assert 0.98 <= illum <= 1.0, f"Expected ~full moon, got {illum:.4f}"
 
 def test_moon_phase_fraction_bounds():
-    """Illumination fraction is always between 0 and 1."""
+    """
+    Illumination fraction is always between 0 and 1.
+    """
     t = sg.ts.from_datetime(datetime(2025, 1, 1, tzinfo=tz.utc))
     illum = sg.moon_phase_fraction(t)
     assert 0.0 <= illum <= 1.0
@@ -53,7 +55,34 @@ def test_visible_planets_daytime_empty_when_not_dark():
     assert data["sun_altitude_deg"] > -18.0  # not dark
     assert len(data["visible_planets"]) == 0
 
+def test_moon_fraction_new():
+    """
+    Last new moon occured on October 21, 2025 at 8:25 AM
+    Illumination should be near at its lowest ~.2
+    """
+    eastern = ZoneInfo("US/Eastern")
+    approx_new_moon_local = datetime(2025, 10, 21, 8, 25, tzinfo=eastern)
 
+    t = sg.ts.from_datetime(approx_new_moon_local)
+
+    illum = sg.moon_phase_fraction(t)
+    assert 0.0 <= illum <= .20, f"Expected ~full moon, got {illum:.4f}"
+
+
+def test_alt_az_in_range():
+    """
+    Altitude should be in range: -90.0 <= altitude <= 90.0'
+    Azimuth should be in range: 0 <= azimuth <= 360.0
+    """
+    t = sg.ts.from_datetime(datetime.now(tz.utc))
+    observer = sg.EARTH + sg.wgs84.latlon(39.981, -75.155)
+
+    alt,az = sg.alt_az_simple(sg.SUN, observer, t)
+
+    assert isinstance(alt,float)
+    assert isinstance(az,float)
+    assert -90.0 <= alt <= 90.0
+    assert 0 <= az <= 360.0
 #deprecated test. already covered by test_moon_phase_fraction_fullish and test_moon_phase_fraction_bounds
 
 # def test_moon_phase():
