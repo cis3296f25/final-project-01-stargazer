@@ -104,3 +104,11 @@ def api_visible():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
+
+#Rate how good the viewing conditions are"""
+def observation_quality(altitude, magnitude, moon_illumination):
+    score = altitude / 90.0  # Higher is better
+    if moon_illumination > 0.5:  # Bright moon reduces visibility
+        score *= 0.7
+    return min(1.0, score)
