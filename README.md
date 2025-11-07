@@ -7,20 +7,52 @@ The app provides:
 📱 Educational and personal use – perfect for astronomy enthusiasts, students, or anyone interested in the connection between the stars and human experience.
 Built with modern web technologies for performance and clarity, Star Gazer aims to make stargazing accessible, visual, and meaningful — all from your browser.
 
+## How to run
 
-![This is a screenshot.](mockup.png)
-# How to run
-Provide here instructions on how to use your application.   
-- Download the latest binary from the Release section on the right on GitHub.  
-- On the command line uncompress using
+0. **Clone this repo into a directory**
+
+   ```
+   git clone https://github.com/cis3296f25/final-project-01-stargazer.git
+   ```
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+   > If your network restricts direct npm registry access, configure an internal proxy or mirror before installing.
+
+2. **Environment variables**
+   Create a `.env` file based on `.env.example` and set your keys:
+   ```dotenv
+   VITE_GOOGLE_MAPS_API_KEY=
+   VITE_API_BASE_URL=http://localhost:5000
+   ```
+   `VITE_API_BASE_URL` is optional—when omitted the dev server proxies `/api` to `http://localhost:5000`.
+
+3. **Start the flask backend**
+   On a separate terminal in the same directory
+   ```
+   python stargazer.py
+   ```
+
+4. **Start the dev server**
+   ```bash
+   npm run dev
+   ```
+   Open the printed URL (default `http://localhost:5173`). Requests to `/api` are proxied to the Flask backend to avoid CORS issues.
+
+
+## Folder Structure
+
 ```
-tar -xzf  
+src/
+  components/     # Reusable UI building blocks (maps, cards, navbar, etc.)
+  context/        # React context for shared location + visibility state
+  data/           # Mock constellation list until backend support lands
+  lib/            # API client, formatting helpers, and utilities
+  pages/          # Routed screens (landing, minimized map, fullscreen map)
+  styles/         # Tailwind globals and design tokens
 ```
-- On the command line run with
-```
-./hello
-```
-- You will see Hello World! on your terminal. 
 
 # How to contribute
 Follow this project board to know the latest status of the project: [http://...]([http://...])  

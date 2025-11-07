@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List
 from flask import Flask, request, jsonify
 from skyfield.api import Loader, wgs84
+from flask_cors import CORS
 
 
 load = Loader('~/skyfield-data')
@@ -85,6 +86,8 @@ def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: dateti
 
 app = Flask(__name__)
 
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=False)
+
 @app.get("/visible")
 def api_visible():
     try:
@@ -105,4 +108,4 @@ def api_visible():
     return jsonify(data)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=5000, debug=True)
