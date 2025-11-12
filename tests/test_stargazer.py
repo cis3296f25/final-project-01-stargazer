@@ -17,6 +17,12 @@ from skyfield.api import Loader
 from datetime import datetime, timezone as tz, timedelta
 from zoneinfo import ZoneInfo
 
+from datetime import datetime, timezone
+import os
+import types
+import sys
+import pytest
+
 load = Loader('~/skyfield-data')
 ts = load.timescale()
 
@@ -83,28 +89,183 @@ def test_alt_az_in_range():
     assert isinstance(az,float)
     assert -90.0 <= alt <= 90.0
     assert 0 <= az <= 360.0
-#deprecated test. already covered by test_moon_phase_fraction_fullish and test_moon_phase_fraction_bounds
 
-# def test_moon_phase():
-#     #Tests moon phase math
-#     """
-#     Tests the moon phase fraction function
-#     in stargazer.py
+def _install_fake_skyfield():
+    #creates a fake skyfield.api library so the tests don't have to download actual data
+        #pretends to be sykfield but just returns dummy objects
+        #keeps the flask API offline
 
-#     Moon phase fraction should be 1 for 
-#     11/5/2025 (Full Moon)
-#     """
-#     eastern = ZoneInfo('US/Eastern')
-#     test_date = ts.from_datetime(datetime(2025,11,5,11,30,tzinfo=eastern))
+    fake_api = types.ModuleType("skyfield.api")
 
-#     #Variables for expected and actual values
-#     exp = 1
-#     act = sg.moon_phase_fraction(test_date)
-#     try:
-#         #print(math.isclose(act, exp, rel_tol=1e-4))
-#         assert math.isclose(1, exp, rel_tol=1e-4)
-#         return 1
-#     except AssertionError:
-#         print('Moon phase should approximately be: ' + str(exp))
-#         print('Moon phase is: ' + str(act))
-#         return 0
+    class Loader:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def timescale(self):
+            #stargazer just stores this; we never call real methods on it in tests
+            return object()
+
+        def __call__(self, *_args, **_kwargs):
+            #return a dict-like with the keys stargazer expects at import time.
+            class Eph(dict):
+                def __getitem__(self, key):
+                    #return any sentinel object; we never actually use it when we stub visible_planets
+                    return super().get(key, object())
+
+            eph = Eph()
+            eph.update({
+                "earth": object(),
+                "sun": object(),
+                "moon": object(),
+                "mercury barycenter": object(),
+                "venus barycenter": object(),
+                "mars barycenter": object(),
+                "jupiter barycenter": object(),
+                "saturn barycenter": object(),
+                "uranus barycenter": object(),
+                "neptune barycenter": object(),
+            })
+            return eph
+
+    #stargazer imports `wgs84` and later calls `wgs84.latlon(...)`
+    fake_wgs84 = types.SimpleNamespace(
+        latlon=lambda **_kwargs: object()
+    )
+
+    fake_api.Loader = Loader
+    fake_api.wgs84 = fake_wgs84
+
+    sys.modules["skyfield.api"] = fake_api
+
+
+@pytest.fixture(scope="session")
+def stargazer_module():
+    """
+    Import stargazer with either a fake or the real Skyfield, depending on env.
+    Returns the imported module object.
+    """
+    use_real = os.getenv("USE_REAL_SKYFIELD") == "1"
+    if not use_real:
+        #install the fake before the first import
+        _install_fake_skyfield()
+
+    #import (or re-import) the module so it picks up our fake if present
+    if "stargazer" in sys.modules:
+        del sys.modules["stargazer"]
+    import stargazer  # noqa: E402
+    return stargazer
+
+
+@pytest.fixture()
+def app(stargazer_module):
+    #flask app from module
+    stargazer_module.app.config.update(TESTING=True)
+    return stargazer_module.app
+
+
+@pytest.fixture()
+def client(app):
+    return app.test_client()
+    #creates a test client
+    #used for fake wbe requests (ex: GET /visible?lat=40&lon=-75)
+
+
+def _iso_utc(dt: datetime) -> str:
+    return (
+        dt.astimezone(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
+    #helper function that returns a UTC datetime into a clean ISO string (2-25-01-02T03:04:05Z)
+
+
+def test_missing_lat_or_lon_returns_400(client):
+    resp = client.get("/visible")
+    assert resp.status_code == 400
+    assert "lat and lon" in resp.get_json()["error"]
+
+    resp = client.get("/visible?lat=39.98")
+    assert resp.status_code == 400
+
+    resp = client.get("/visible?lon=-75.16")
+    assert resp.status_code == 400
+    #testing if lat or lon is missing
+
+
+
+def test_non_numeric_lat_lon_returns_400(client):
+    assert client.get("/visible?lat=philly&lon=-75.16").status_code == 400
+    assert client.get("/visible?lat=39.98&lon=west").status_code == 400
+    #tests if sending a non numeric value retunrs an error
+
+def test_success_with_defaults_and_stub(monkeypatch, stargazer_module, client):
+    captured = {}
+
+    def fake_visible_planets(lat, lon, elev, when_utc, twilight):
+        captured.update(dict(lat=lat, lon=lon, elev=elev, when_utc=when_utc, twilight=twilight))
+        return {"visible_planets": [{"name": "Mars", "altitude_deg": 42.0}], "moon": {"illumination_fraction": 0.5}}
+
+    #replace the heavy function with a small predictable stub
+    monkeypatch.setattr(stargazer_module, "visible_planets", fake_visible_planets)
+
+    resp = client.get("/visible?lat=39.98&lon=-75.16")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert "visible_planets" in data and data["visible_planets"][0]["name"] == "Mars"
+
+    #check parsed defaults and types
+    assert captured["lat"] == 39.98
+    assert captured["lon"] == -75.16
+    assert captured["elev"] == 0.0
+    assert captured["twilight"] == "astronomical"
+    assert captured["when_utc"].tzinfo == timezone.utc
+
+    #tests a successful request
+
+
+def test_elevation_twilight_time_parsing(monkeypatch, stargazer_module, client):
+    seen = {}
+
+    def fake_visible_planets(lat, lon, elev, when_utc, twilight):
+        seen.update(dict(lat=lat, lon=lon, elev=elev, when_utc=when_utc, twilight=twilight))
+        return {"ok": True}
+
+    monkeypatch.setattr(stargazer_module, "visible_planets", fake_visible_planets)
+
+    t = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    qs = f"lat=40&lon=-75&elev=120.5&twilight=Nautical&time={_iso_utc(t)}"
+    resp = client.get(f"/visible?{qs}")
+    assert resp.status_code == 200
+    assert resp.get_json() == {"ok": True}
+
+    assert seen["lat"] == 40.0
+    assert seen["lon"] == -75.0
+    assert seen["elev"] == 120.5
+    assert seen["twilight"] == "nautical"
+    assert seen["when_utc"] == t
+
+
+def test_time_with_explicit_offset_ok(monkeypatch, stargazer_module, client):
+    def fake_visible_planets(lat, lon, elev, when_utc, twilight):
+        assert when_utc == datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+        return {"ok": True}
+
+    monkeypatch.setattr(stargazer_module, "visible_planets", fake_visible_planets)
+
+    resp = client.get(
+        "/visible",
+        query_string={"lat": 40, "lon": -75, "time": "2025-01-02T03:04:05+00:00"},
+    )
+    assert resp.status_code == 200
+    assert resp.get_json()["ok"] is True
+
+
+def test_bad_time_string_current_behavior(client):
+    """
+    Your current route does not catch bad 'time' strings, so Flask will 500.
+    If you later add try/except around datetime parsing, change to assert 400.
+    """
+    with pytest.raises(ValueError):
+        client.get("/visible", query_string={"lat": 40, "lon": -75, "time": "not-a-time"})
+
