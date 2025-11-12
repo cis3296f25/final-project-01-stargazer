@@ -15,13 +15,24 @@ Built with modern web technologies for performance and clarity, Star Gazer aims 
    git clone https://github.com/cis3296f25/final-project-01-stargazer.git
    ```
 
-1. **Install dependencies**
+1. **Install frontend dependencies**
    ```bash
    npm install
    ```
    > If your network restricts direct npm registry access, configure an internal proxy or mirror before installing.
 
-2. **Environment variables**
+2. **Install backend dependencies**
+   Upgrade pip and install requirements
+   ```bash
+   python -m pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+   >if ```requirements.txt``` does not exist, generate one with 
+   >   ```
+   >   pip freeze > requirements.txt
+   >   ``` 
+
+3. **Environment variables**
    Create a `.env` file based on `.env.example` and set your keys:
    ```dotenv
    VITE_GOOGLE_MAPS_API_KEY=
@@ -29,18 +40,44 @@ Built with modern web technologies for performance and clarity, Star Gazer aims 
    ```
    `VITE_API_BASE_URL` is optional—when omitted the dev server proxies `/api` to `http://localhost:5000`.
 
-3. **Start the flask backend**
+4. **Start the flask backend**
    On a separate terminal in the same directory
    ```
    python stargazer.py
    ```
 
-4. **Start the dev server**
+5. **Start the dev server**
    ```bash
    npm run dev
    ```
    Open the printed URL (default `http://localhost:5173`). Requests to `/api` are proxied to the Flask backend to avoid CORS issues.
 
+
+## Running Tests
+
+### Running All Tets
+From the project root
+```bash
+pytest -v
+```
+
+### Running Tests With Coverage
+1. Install the coverage plugin:
+   ```bash
+   pip install pytest-cov
+   ```
+2. Run with coverage reporting:
+   ```bash
+   pytest --cov=stargazer --cov-report=term-missing
+   ```
+
+   - ```--cov=stargazer``` measures coverage for the stargazer module
+   - ```--cov-report=term-missing``` shows uncovered lines directly in the terminal
+   - Optional: 
+      ```bash
+      pytest --cov=stargazer --cov-report=html
+      ```
+      Opens a detailed HTML coverage report in the ```htmlcov/``` folder
 
 ## Folder Structure
 
