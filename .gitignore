@@ -4,6 +4,7 @@ node_modules/
 # Python bytecode
 __pycache__/
 *.pyc
+tests/__pycache__/
 
 # Virtual environments
 venv/
