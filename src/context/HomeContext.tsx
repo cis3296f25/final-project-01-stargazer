@@ -1,222 +1,296 @@
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react';
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { debounce } from '../lib/debounce';
 import { fetchVisible, type Twilight, type VisibleResponse } from '../lib/api';
 import type { Coordinates } from '../lib/map';
 
+export interface FavoriteView {
+	id: string;
+	name: string;
+	lat: number;
+	lon: number;
+	elev: number;
+	twilight: Twilight;
+	timeIso?: string;
+}
+
 interface HomeContextValue {
-  coordinates: Coordinates;
-  setCoordinates: (coords: Coordinates) => void;
-  twilight: Twilight;
-  setTwilight: (twilight: Twilight) => void;
-  timeIso?: string;
-  setTimeIso: (value?: string) => void;
-  visibleData: VisibleResponse | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
-  setError: (message: string | null) => void;
+	coordinates: Coordinates;
+	setCoordinates: (coords: Coordinates) => void;
+	twilight: Twilight;
+	setTwilight: (twilight: Twilight) => void;
+	timeIso?: string;
+	setTimeIso: (value?: string) => void;
+	visibleData: VisibleResponse | null;
+	loading: boolean;
+	error: string | null;
+	refetch: () => void;
+	setError: (message: string | null) => void;
+
+	// NEW: favorites support
+	favorites: FavoriteView[];
+	addFavorite: (fav: Omit<FavoriteView, 'id'>) => void;
+	removeFavorite: (id: string) => void;
+	loadFavorite: (id: string) => void;
 }
 
 const DEFAULT_COORDINATES: Coordinates = {
-  lat: 35.2271,
-  lon: -80.8431,
-  elev: 0
+	lat: 35.2271,
+	lon: -80.8431,
+	elev: 0
 };
 
 const COORDS_KEY = 'stargazer:coords';
 const TWILIGHT_KEY = 'stargazer:twilight';
 const TIME_KEY = 'stargazer:time';
+const FAVORITES_KEY = 'stargazer:favorites';
 
 const HomeContext = createContext<HomeContextValue | undefined>(undefined);
 
 function loadStoredCoordinates(): Coordinates {
-  if (typeof window === 'undefined') {
-    return DEFAULT_COORDINATES;
-  }
-  try {
-    const raw = localStorage.getItem(COORDS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as Coordinates;
-      if (typeof parsed.lat === 'number' && typeof parsed.lon === 'number') {
-        return {
-          lat: parsed.lat,
-          lon: parsed.lon,
-          elev: typeof parsed.elev === 'number' ? parsed.elev : 0
-        };
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to parse stored coordinates', error);
-  }
-  return DEFAULT_COORDINATES;
+	if (typeof window === 'undefined') {
+		return DEFAULT_COORDINATES;
+	}
+	try {
+		const raw = localStorage.getItem(COORDS_KEY);
+		if (raw) {
+			const parsed = JSON.parse(raw) as Coordinates;
+			if (typeof parsed.lat === 'number' && typeof parsed.lon === 'number') {
+				return {
+					lat: parsed.lat,
+					lon: parsed.lon,
+					elev: typeof parsed.elev === 'number' ? parsed.elev : 0
+				};
+			}
+		}
+	} catch (error) {
+		console.warn('Failed to parse stored coordinates', error);
+	}
+	return DEFAULT_COORDINATES;
 }
 
 function loadStoredTwilight(): Twilight {
-  if (typeof window === 'undefined') {
-    return 'astronomical';
-  }
-  const raw = localStorage.getItem(TWILIGHT_KEY) as Twilight | null;
-  if (raw === 'civil' || raw === 'nautical' || raw === 'astronomical') {
-    return raw;
-  }
-  return 'astronomical';
+	if (typeof window === 'undefined') {
+		return 'astronomical';
+	}
+	const raw = localStorage.getItem(TWILIGHT_KEY) as Twilight | null;
+	if (raw === 'civil' || raw === 'nautical' || raw === 'astronomical') {
+		return raw;
+	}
+	return 'astronomical';
 }
 
 function loadStoredTime(): string | undefined {
-  if (typeof window === 'undefined') {
-    return undefined;
-  }
-  const raw = localStorage.getItem(TIME_KEY);
-  return raw ?? undefined;
+	if (typeof window === 'undefined') {
+		return undefined;
+	}
+	const raw = localStorage.getItem(TIME_KEY);
+	return raw ?? undefined;
+}
+
+function loadStoredFavorites(): FavoriteView[] {
+	if (typeof window === 'undefined') {
+		return [];
+	}
+	try {
+		const raw = window.localStorage.getItem(FAVORITES_KEY);
+		if (!raw) return [];
+		const parsed = JSON.parse(raw) as FavoriteView[];
+		if (!Array.isArray(parsed)) return [];
+		return parsed.map(f => ({
+			...f,
+			// basic sanity defaults
+			elev: typeof f.elev === 'number' ? f.elev : 0
+		}));
+	} catch (error) {
+		console.warn('Failed to parse stored favorites', error);
+		return [];
+	}
 }
 
 export function HomeProvider({ children }: { children: ReactNode }) {
-  const [coordinates, setCoordinatesState] = useState<Coordinates>(() => loadStoredCoordinates());
-  const [twilight, setTwilightState] = useState<Twilight>(() => loadStoredTwilight());
-  const [timeIso, setTimeIsoState] = useState<string | undefined>(() => loadStoredTime());
-  const [visibleData, setVisibleData] = useState<VisibleResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+	const [coordinates, setCoordinatesState] = useState<Coordinates>(() => loadStoredCoordinates());
+	const [twilight, setTwilightState] = useState<Twilight>(() => loadStoredTwilight());
+	const [timeIso, setTimeIsoState] = useState<string | undefined>(() => loadStoredTime());
+	const [visibleData, setVisibleData] = useState<VisibleResponse | null>(null);
+	const [loading, setLoading] = useState<boolean>(false);
+	const [error, setError] = useState<string | null>(null);
+	const [favorites, setFavorites] = useState<FavoriteView[]>(() => loadStoredFavorites());
+	const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    localStorage.setItem(COORDS_KEY, JSON.stringify(coordinates));
-  }, [coordinates]);
+	useEffect(() => {
+		localStorage.setItem(COORDS_KEY, JSON.stringify(coordinates));
+	}, [coordinates]);
 
-  useEffect(() => {
-    localStorage.setItem(TWILIGHT_KEY, twilight);
-  }, [twilight]);
+	useEffect(() => {
+		localStorage.setItem(TWILIGHT_KEY, twilight);
+	}, [twilight]);
 
-  useEffect(() => {
-    if (timeIso) {
-      localStorage.setItem(TIME_KEY, timeIso);
-    } else {
-      localStorage.removeItem(TIME_KEY);
-    }
-  }, [timeIso]);
+	useEffect(() => {
+		if (timeIso) {
+			localStorage.setItem(TIME_KEY, timeIso);
+		} else {
+			localStorage.removeItem(TIME_KEY);
+		}
+	}, [timeIso]);
 
-  const executeFetch = useCallback(
-    async (signal?: AbortSignal) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await fetchVisible({
-          lat: coordinates.lat,
-          lon: coordinates.lon,
-          elev: coordinates.elev ?? 0,
-          twilight,
-          time: timeIso,
-          signal
-        });
-        setVisibleData(data);
-      } catch (err) {
-        if ((err as Error).name === 'AbortError') {
-          return;
-        }
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [coordinates, twilight, timeIso]
-  );
+	useEffect(() => {
+		try {
+			window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+		} catch (error) {
+			console.warn('Failed to persist favorites', error);
+		}
+	}, [favorites]);
 
-  const debouncedFetch = useMemo(
-    () =>
-      debounce(() => {
-        const controller = new AbortController();
-        if (abortRef.current) {
-          abortRef.current.abort();
-        }
-        abortRef.current = controller;
-        void executeFetch(controller.signal);
-      }, 320),
-    [executeFetch]
-  );
+	const executeFetch = useCallback(
+		async (signal?: AbortSignal) => {
+			setLoading(true);
+			setError(null);
+			try {
+				const data = await fetchVisible({
+					lat: coordinates.lat,
+					lon: coordinates.lon,
+					elev: coordinates.elev ?? 0,
+					twilight,
+					time: timeIso,
+					signal
+				});
+				setVisibleData(data);
+			} catch (err) {
+				if ((err as Error).name === 'AbortError') {
+					return;
+				}
+				setError((err as Error).message);
+			} finally {
+				setLoading(false);
+			}
+		},
+		[coordinates, twilight, timeIso]
+	);
 
-  useEffect(() => {
-    debouncedFetch();
-    return () => {
-      debouncedFetch.cancel();
-    };
-  }, [coordinates, twilight, timeIso, debouncedFetch]);
+	const debouncedFetch = useMemo(
+		() =>
+			debounce(() => {
+				const controller = new AbortController();
+				if (abortRef.current) {
+					abortRef.current.abort();
+				}
+				abortRef.current = controller;
+				void executeFetch(controller.signal);
+			}, 320),
+		[executeFetch]
+	);
 
-  useEffect(() => {
-    return () => {
-      if (abortRef.current) {
-        abortRef.current.abort();
-      }
-    };
-  }, []);
+	useEffect(() => {
+		debouncedFetch();
+		return () => {
+			debouncedFetch.cancel();
+		};
+	}, [coordinates, twilight, timeIso, debouncedFetch]);
 
-  const setCoordinates = useCallback((coords: Coordinates) => {
-    setCoordinatesState((previous) => {
-      const next = {
-        lat: coords.lat,
-        lon: coords.lon,
-        elev: coords.elev ?? 0
-      };
+	useEffect(() => {
+		return () => {
+			if (abortRef.current) {
+				abortRef.current.abort();
+			}
+		};
+	}, []);
 
-      if (
-        Math.abs(previous.lat - next.lat) < 0.0001 &&
-        Math.abs(previous.lon - next.lon) < 0.0001 &&
-        Math.abs((previous.elev ?? 0) - (next.elev ?? 0)) < 0.5
-      ) {
-        return previous;
-      }
+	const setCoordinates = useCallback((coords: Coordinates) => {
+		setCoordinatesState(previous => {
+			const next = {
+				lat: coords.lat,
+				lon: coords.lon,
+				elev: coords.elev ?? 0
+			};
 
-      return next;
-    });
-  }, []);
+			if (
+				Math.abs(previous.lat - next.lat) < 0.0001 &&
+				Math.abs(previous.lon - next.lon) < 0.0001 &&
+				Math.abs((previous.elev ?? 0) - (next.elev ?? 0)) < 0.5
+			) {
+				return previous;
+			}
 
-  const setTwilight = useCallback((value: Twilight) => {
-    setTwilightState(value);
-  }, []);
+			return next;
+		});
+	}, []);
 
-  const setTimeIso = useCallback((value?: string) => {
-    setTimeIsoState(value && value.length > 0 ? value : undefined);
-  }, []);
+	const setTwilight = useCallback((value: Twilight) => {
+		setTwilightState(value);
+	}, []);
 
-  const refetch = useCallback(() => {
-    debouncedFetch.cancel();
-    const controller = new AbortController();
-    if (abortRef.current) {
-      abortRef.current.abort();
-    }
-    abortRef.current = controller;
-    void executeFetch(controller.signal);
-  }, [debouncedFetch, executeFetch]);
+	const setTimeIso = useCallback((value?: string) => {
+		setTimeIsoState(value && value.length > 0 ? value : undefined);
+	}, []);
 
-  const value: HomeContextValue = {
-    coordinates,
-    setCoordinates,
-    twilight,
-    setTwilight,
-    timeIso,
-    setTimeIso,
-    visibleData,
-    loading,
-    error,
-    refetch,
-    setError
-  };
+	const refetch = useCallback(() => {
+		debouncedFetch.cancel();
+		const controller = new AbortController();
+		if (abortRef.current) {
+			abortRef.current.abort();
+		}
+		abortRef.current = controller;
+		void executeFetch(controller.signal);
+	}, [debouncedFetch, executeFetch]);
 
-  return <HomeContext.Provider value={value}>{children}</HomeContext.Provider>;
+	// ---- Favorites actions ----
+
+	const addFavorite = useCallback((fav: Omit<FavoriteView, 'id'>) => {
+		const id =
+			typeof crypto !== 'undefined' && 'randomUUID' in crypto
+				? crypto.randomUUID()
+				: `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+		const next: FavoriteView = { id, ...fav };
+		setFavorites(prev => [...prev, next]);
+	}, []);
+
+	const removeFavorite = useCallback((id: string) => {
+		setFavorites(prev => prev.filter(f => f.id !== id));
+	}, []);
+
+	const loadFavorite = useCallback(
+		(id: string) => {
+			const fav = favorites.find(f => f.id === id);
+			if (!fav) return;
+
+			setCoordinates({
+				lat: fav.lat,
+				lon: fav.lon,
+				elev: fav.elev
+			});
+			setTwilight(fav.twilight);
+			setTimeIso(fav.timeIso);
+			// No need to call refetch explicitly; the existing effect will run
+		},
+		[favorites, setCoordinates, setTwilight, setTimeIso]
+	);
+
+	const value: HomeContextValue = {
+		coordinates,
+		setCoordinates,
+		twilight,
+		setTwilight,
+		timeIso,
+		setTimeIso,
+		visibleData,
+		loading,
+		error,
+		refetch,
+		setError,
+		favorites,
+		addFavorite,
+		removeFavorite,
+		loadFavorite
+	};
+
+	return <HomeContext.Provider value={value}>{children}</HomeContext.Provider>;
 }
 
 export function useHomeContext(): HomeContextValue {
-  const context = useContext(HomeContext);
-  if (!context) {
-    throw new Error('useHomeContext must be used within a HomeProvider');
-  }
-  return context;
+	const context = useContext(HomeContext);
+	if (!context) {
+		throw new Error('useHomeContext must be used within a HomeProvider');
+	}
+	return context;
 }
