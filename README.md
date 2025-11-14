@@ -7,23 +7,90 @@ The app provides:
 📱 Educational and personal use – perfect for astronomy enthusiasts, students, or anyone interested in the connection between the stars and human experience.
 Built with modern web technologies for performance and clarity, Star Gazer aims to make stargazing accessible, visual, and meaningful — all from your browser.
 
+## How to run
 
-![This is a screenshot.](mockup.png)
-# How to run
-Provide here instructions on how to use your application.   
-- Download the latest binary from the Release section on the right on GitHub.  
-- On the command line uncompress using
-```
-tar -xzf  
-```
-- On the command line run with
-```
-./hello
-```
-- You will see Hello World! on your terminal. 
+0. **Clone this repo into a directory**
 
-# How to contribute
-Follow this project board to know the latest status of the project: [http://...]([http://...])  
+   ```
+   git clone https://github.com/cis3296f25/final-project-01-stargazer.git
+   ```
+
+1. **Install frontend dependencies**
+   ```bash
+   npm install
+   ```
+   > If your network restricts direct npm registry access, configure an internal proxy or mirror before installing.
+   > If you receive an error "npm not recognize" install node.js from [Node.js](https://nodejs.org/en/download)
+
+2. **Install backend dependencies**
+   Upgrade pip and install requirements
+   ```bash
+   python -m pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
+   >if ```requirements.txt``` does not exist, generate one with 
+   >   ```
+   >   pip freeze > requirements.txt
+   >   ``` 
+
+3. **Environment variables**
+   Create a `.env` file based on `.env.example` and set your keys:
+   ```dotenv
+   VITE_GOOGLE_MAPS_API_KEY=
+   VITE_API_BASE_URL=http://localhost:5000
+   ```
+   `VITE_API_BASE_URL` is optional—when omitted the dev server proxies `/api` to `http://localhost:5000`.
+
+4. **Start the flask backend**
+   On a separate terminal in the same directory
+   ```
+   python stargazer.py
+   ```
+
+5. **Start the dev server**
+   ```bash
+   npm run dev
+   ```
+   Open the printed URL (default `http://localhost:5173`). Requests to `/api` are proxied to the Flask backend to avoid CORS issues.
+
+
+## Running Tests
+
+### Running All Tets
+From the project root
+```bash
+pytest -v
+```
+
+### Running Tests With Coverage
+1. Install the coverage plugin:
+   ```bash
+   pip install pytest-cov
+   ```
+2. Run with coverage reporting:
+   ```bash
+   pytest --cov=stargazer --cov-report=term-missing
+   ```
+
+   - ```--cov=stargazer``` measures coverage for the stargazer module
+   - ```--cov-report=term-missing``` shows uncovered lines directly in the terminal
+   - Optional: 
+      ```bash
+      pytest --cov=stargazer --cov-report=html
+      ```
+      Opens a detailed HTML coverage report in the ```htmlcov/``` folder
+
+## Folder Structure
+
+```
+src/
+  components/     # Reusable UI building blocks (maps, cards, navbar, etc.)
+  context/        # React context for shared location + visibility state
+  data/           # Mock constellation list until backend support lands
+  lib/            # API client, formatting helpers, and utilities
+  pages/          # Routed screens (landing, minimized map, fullscreen map)
+  styles/         # Tailwind globals and design tokens
+``` 
 
 ### How to build
 - Use this github repository: ... 

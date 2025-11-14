@@ -8,6 +8,8 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List
 from flask import Flask, request, jsonify
 from skyfield.api import Loader, wgs84
+from flask_cors import CORS
+
 
 load = Loader('~/skyfield-data')
 ts = load.timescale()
@@ -16,6 +18,7 @@ eph = load('de440s.bsp')
 EARTH = eph['earth']
 SUN = eph['sun']
 MOON = eph['moon']
+
 
 PLANETS = {
     'Mercury': eph['mercury barycenter'],
@@ -26,6 +29,22 @@ PLANETS = {
     'Uranus':  eph['uranus barycenter'],
     'Neptune': eph['neptune barycenter'],
 }
+
+# Constellation data: approximate center declination and brightest star magnitude
+CONSTELLATIONS = [
+    {'id': 'ori', 'name': 'Orion', 'abbreviation': 'Ori', 'declination_deg': 5.0, 'magnitude': 2.0},
+    {'id': 'uma', 'name': 'Ursa Major', 'abbreviation': 'UMa', 'declination_deg': 55.0, 'magnitude': 1.9},
+    {'id': 'umi', 'name': 'Ursa Minor', 'abbreviation': 'UMi', 'declination_deg': 75.0, 'magnitude': 2.2},
+    {'id': 'cas', 'name': 'Cassiopeia', 'abbreviation': 'Cas', 'declination_deg': 60.0, 'magnitude': 2.4},
+    {'id': 'lyr', 'name': 'Lyra', 'abbreviation': 'Lyr', 'declination_deg': 38.0, 'magnitude': 0.0},
+    {'id': 'cyg', 'name': 'Cygnus', 'abbreviation': 'Cyg', 'declination_deg': 45.0, 'magnitude': 1.3},
+    {'id': 'sco', 'name': 'Scorpius', 'abbreviation': 'Sco', 'declination_deg': -25.0, 'magnitude': 1.6},
+    {'id': 'leo', 'name': 'Leo', 'abbreviation': 'Leo', 'declination_deg': 15.0, 'magnitude': 1.4},
+    {'id': 'vir', 'name': 'Virgo', 'abbreviation': 'Vir', 'declination_deg': -5.0, 'magnitude': 3.0},
+    {'id': 'taur', 'name': 'Taurus', 'abbreviation': 'Tau', 'declination_deg': 15.0, 'magnitude': 1.5},
+    {'id': 'and', 'name': 'Andromeda', 'abbreviation': 'And', 'declination_deg': 40.0, 'magnitude': 2.9},
+    {'id': 'psa', 'name': 'Piscis Austrinus', 'abbreviation': 'PsA', 'declination_deg': -30.0, 'magnitude': 1.1}
+]
 
 TWILIGHT_CUTOFFS = {
     'civil': -6.0,
@@ -42,7 +61,20 @@ def moon_phase_fraction(t) -> float:
     e = EARTH.at(t)
     sun, moon = e.observe(SUN).apparent(), e.observe(MOON).apparent()
     phase_angle = moon.separation_from(sun).radians
-    return (1 + cos(phase_angle)) / 2.0
+    #return (1 + cos(phase_angle)) / 2.0 old
+    return (1 - cos(phase_angle)) / 2.0 #new. moon phase fraction: 0=new, 1=full. full expects 1.0
+
+
+
+def is_constellation_visible(declination_deg: float, observer_lat: float) -> bool:
+    """Check if a constellation is potentially visible based on declination and observer latitude."""
+    # A constellation is visible if its declination is within the observer's visible sky
+    # Simplified: constellation is visible if it can rise above horizon
+    # For northern hemisphere: declination > (90 - latitude) means circumpolar
+    # For southern hemisphere: declination < -(90 - abs(latitude)) means circumpolar
+    # For general case: if abs(declination - observer_lat) < 90, it can be visible
+    return abs(declination_deg - observer_lat) < 90
+
 
 def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: datetime, twilight: str) -> Dict:
     t = ts.from_datetime(when_utc)
@@ -65,6 +97,18 @@ def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: dateti
     moon_alt_deg, moon_az_deg = alt_az_simple(MOON, observer, t)
     moon_illum = moon_phase_fraction(t)
 
+    # Calculate visible constellations
+    visible_constellations: List[Dict] = []
+    for const in CONSTELLATIONS:
+        is_visible = is_constellation_visible(const['declination_deg'], lat) and dark_enough
+        visible_constellations.append({
+            'id': const['id'],
+            'name': const['name'],
+            'abbreviation': const['abbreviation'],
+            'visible': is_visible,
+            'magnitude': const['magnitude']
+        })
+
     return {
         'when_utc': when_utc.isoformat(),
         'location': {'lat': lat, 'lon': lon, 'elevation_m': elevation_m},
@@ -75,10 +119,13 @@ def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: dateti
             'altitude_deg': round(moon_alt_deg, 2),
             'azimuth_deg': round(moon_az_deg, 2),
             'illumination_fraction': round(moon_illum, 3)
-        }
+        },
+        'constellations': visible_constellations
     }
 
 app = Flask(__name__)
+
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=False)
 
 @app.get("/visible")
 def api_visible():
@@ -100,4 +147,4 @@ def api_visible():
     return jsonify(data)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

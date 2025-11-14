@@ -1,0 +1,41 @@
+# Node
+node_modules/
+
+# Python bytecode
+__pycache__/
+*.pyc
+tests/__pycache__/
+
+# Virtual environments
+venv/
+.env/
+.env.local
+
+# Coverage and pytest cache
+.coverage
+.coverage.*
+htmlcov/
+pytest_cache/
+.pytest_cache/
+
+# Logs
+*.log
+
+# Local environment / secrets
+.env
+
+# OS/system
+.DS_Store
+Thumbs.db
+
+# Build/packaging
+dist/
+build/
+*.egg-info/
+
+# Ignore large media files not needed for code versioning
+mockup.png
+images.png
+
+# Vite cache
+.vite/
