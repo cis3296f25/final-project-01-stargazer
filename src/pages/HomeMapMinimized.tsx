@@ -23,6 +23,7 @@ export function HomeMapMinimized() {
             planets={visibleData?.visible_planets ?? []}
             moon={visibleData?.moon}
             sunAltitudeDeg={visibleData?.sun_altitude_deg}
+            constellations={visibleData?.constellations}
             loading={loading}
             error={error}
             onRetry={refetch}

@@ -12,6 +12,14 @@ export interface MoonInfo {
   illumination_fraction: number;
 }
 
+export interface Constellation {
+  id: string;
+  name: string;
+  abbreviation: string;
+  visible: boolean;
+  magnitude?: number;
+}
+
 export interface VisibleResponse {
   when_utc: string;
   location: {
@@ -23,6 +31,7 @@ export interface VisibleResponse {
   sun_altitude_deg: number;
   visible_planets: Planet[];
   moon: MoonInfo;
+  constellations?: Constellation[];
 }
 
 export interface FetchVisibleParams {
