@@ -3,6 +3,7 @@ import { CalendarClock, MapPin, RefreshCw } from 'lucide-react';
 import { useHomeContext } from '../context/HomeContext';
 import { formatCoordinate, formatTimestamp, isoToLocalInput, localInputToIso } from '../lib/format';
 import { TwilightSelect } from './TwilightSelect';
+import { useNavigate } from 'react-router-dom';
 
 interface NavbarProps {
   onRefresh?: () => void;
@@ -10,8 +11,9 @@ interface NavbarProps {
 
 export function Navbar({ onRefresh }: NavbarProps) {
   const { coordinates, visibleData, twilight, setTwilight, timeIso, setTimeIso, loading, refetch } = useHomeContext();
+    const navigate = useNavigate();
 
-  const whenText = visibleData?.when_utc
+    const whenText = visibleData?.when_utc
     ? formatTimestamp(visibleData.when_utc)
     : timeIso
       ? formatTimestamp(timeIso)
@@ -37,8 +39,14 @@ export function Navbar({ onRefresh }: NavbarProps) {
     <header className="flex flex-col gap-4 border-b border-white/5 bg-background/60 px-6 py-4 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
       <div className="flex items-start gap-4">
         <div>
-          <div className="text-2xl font-semibold tracking-wide text-white">StarGazer</div>
-          <p className="mt-1 flex items-center gap-2 text-sm text-textSecondary">
+            <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="text-2xl font-semibold tracking-wide text-white hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+                StarGazer
+            </button>
+            <p className="mt-1 flex items-center gap-2 text-sm text-textSecondary">
             <MapPin className="h-4 w-4 text-accent" aria-hidden />
             <span>
               {formatCoordinate(coordinates.lat, 'lat')} · {formatCoordinate(coordinates.lon, 'lon')}
