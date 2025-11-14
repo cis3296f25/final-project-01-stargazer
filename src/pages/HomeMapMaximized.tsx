@@ -58,7 +58,6 @@ export function HomeMapMaximized() {
                     </button>
                   </div>
                 </div>
-        <InfoPanel coordinates={coordinates} data={visibleData ?? null} onExit={() => navigate('/home')} />
       </main>
     </div>
   );
