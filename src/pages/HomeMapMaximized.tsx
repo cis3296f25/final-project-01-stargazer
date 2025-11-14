@@ -37,7 +37,7 @@ export function HomeMapMaximized() {
         <div className="h-[60vh] w-full flex-1 overflow-hidden rounded-[32px] lg:h-auto">
           <FullscreenMap coordinates={draftCoordinates} onCenterChange={handleCenterChange} />
         </div>
-        <div className="flex flex-1 flex-col gap-4">
+        <div className="flex flex-col gap-4">
                   <InfoPanel
                     coordinates={coordinates} // still using real coords
                     data={visibleData ?? null}
