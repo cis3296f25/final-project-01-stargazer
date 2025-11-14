@@ -65,7 +65,7 @@ def moon_phase_fraction(t) -> float:
 #use bright stars to determine constellation visibility
 #aggregate by constellation and keep the brightest visible star as a representative
 
-def visible_constellations_for(observer, t, dark_enough: bool, mag_limit) -> List[Dict]:
+def visible_constellations_for(observer, t, dark_enough: bool, mag_limit: float = 3.0) -> List[Dict]:
     #no constellations visible if not dark enough
     if not dark_enough:
         return []

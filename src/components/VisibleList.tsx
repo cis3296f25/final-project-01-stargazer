@@ -94,11 +94,13 @@ export function VisibleList({ planets, moon, sunAltitudeDeg, constellations, loa
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-textPrimary">{constellation.name}</span>
-                    <span className="text-xs uppercase tracking-wide text-textSecondary/60">{constellation.abbreviation}</span>
+                    <span className="text-xs uppercase tracking-wide text-textSecondary/60">
+                      {constellation.abbreviation}
+                    </span>
                   </div>
                   <p className="mt-1 text-xs text-textSecondary/80">
-                    {constellation.visible ? 'Likely visible' : 'Below horizon'}
-                    {constellation.magnitude !== undefined ? ` • Mag ${constellation.magnitude.toFixed(1)}` : ''}
+                    Alt {constellation.altitude_deg.toFixed(1)}° · Az {constellation.azimuth_deg.toFixed(0)}°
+                    {` • Mag ${constellation.magnitude.toFixed(1)}`}
                   </p>
                 </li>
               ))}
