@@ -16,8 +16,9 @@ export interface Constellation {
   id: string;
   name: string;
   abbreviation: string;
-  visible: boolean;
-  magnitude?: number;
+  magnitude: number;
+  altitude_deg: number;
+  azimuth_deg: number;
 }
 
 export interface VisibleResponse {
@@ -31,7 +32,7 @@ export interface VisibleResponse {
   sun_altitude_deg: number;
   visible_planets: Planet[];
   moon: MoonInfo;
-  constellations?: Constellation[];
+  constellations: Constellation[];
 }
 
 export interface FetchVisibleParams {

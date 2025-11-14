@@ -71,7 +71,7 @@ export function Navbar({ onRefresh }: NavbarProps) {
             <button
               type="button"
               className="rounded-lg border border-white/10 px-3 text-xs font-semibold text-textSecondary transition hover:border-accent hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-              onClick={() => setTimeIso(undefined)}
+              onClick={() => setTimeIso(new Date().toISOString())}
             >
               Now
             </button>
