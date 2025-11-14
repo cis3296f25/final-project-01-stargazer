@@ -17,9 +17,13 @@ interface MiniMapProps {
 }
 
 export function MiniMap({ coordinates, onCenterChange, onEnterFullscreen }: MiniMapProps) {
-  const center = useMemo(() => ({ lat: coordinates.lat, lng: coordinates.lon }), [coordinates.lat, coordinates.lon]);
+  // Marker & map start at the same place, but only double-click will update coordinates
+  const center = useMemo(
+    () => ({ lat: coordinates.lat, lng: coordinates.lon }),
+    [coordinates.lat, coordinates.lon]
+  );
+
   const mapRef = useRef<google.maps.Map | null>(null);
-  const lastNotifiedCenter = useRef<{ lat: number; lng: number } | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'stargazer-map',
@@ -29,26 +33,27 @@ export function MiniMap({ coordinates, onCenterChange, onEnterFullscreen }: Mini
   const handleOnLoad = useCallback(
     (map: google.maps.Map) => {
       mapRef.current = map;
-      lastNotifiedCenter.current = center;
+      // no need to notify parent here; just store ref
     },
-    [center]
+    []
   );
 
-  const handleOnIdle = useCallback(() => {
-    if (!mapRef.current || !onCenterChange) {
-      return;
-    }
-    const mapCenter = mapRef.current.getCenter();
-    if (!mapCenter) {
-      return;
-    }
-    const next = { lat: mapCenter.lat(), lng: mapCenter.lng() };
-    const prev = lastNotifiedCenter.current;
-    if (!prev || Math.abs(prev.lat - next.lat) > 0.0005 || Math.abs(prev.lng - next.lng) > 0.0005) {
-      lastNotifiedCenter.current = next;
-      onCenterChange({ lat: next.lat, lon: next.lng, elev: coordinates.elev ?? 0 });
-    }
-  }, [coordinates.elev, onCenterChange]);
+  // 🔹 NEW: double-click to move pin / update app coordinates
+  const handleMapDblClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (!onCenterChange || !e.latLng) return;
+
+      const lat = e.latLng.lat();
+      const lon = e.latLng.lng();
+
+      onCenterChange({
+        lat,
+        lon,
+        elev: coordinates.elev ?? 0
+      });
+    },
+    [onCenterChange, coordinates.elev]
+  );
 
   if (loadError) {
     return (
@@ -82,17 +87,18 @@ export function MiniMap({ coordinates, onCenterChange, onEnterFullscreen }: Mini
         zoom={6}
         options={{
           disableDefaultUI: true,
+          gestureHandling: 'greedy',
+          disableDoubleClickZoom: true, // ⬅️ important so dblclick is "yours"
           styles: [
             {
               featureType: 'all',
               elementType: 'labels',
               stylers: [{ visibility: 'off' }]
             }
-          ],
-          gestureHandling: 'greedy'
+          ]
         }}
         onLoad={handleOnLoad}
-        onIdle={handleOnIdle}
+        onDblClick={handleMapDblClick} // ⬅️ only this updates coordinates now
       >
         <Marker position={center} />
       </GoogleMap>
