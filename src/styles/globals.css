@@ -31,7 +31,6 @@ body {
     linear-gradient(180deg, rgba(6, 9, 24, 0.9), rgba(3, 4, 12, 1));
 
   position: relative;
-  overflow: hidden;
 }
 
 body::before {
