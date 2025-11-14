@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { VisibleList } from '../components/VisibleList';
@@ -10,9 +11,25 @@ export function HomeMapMinimized() {
   const navigate = useNavigate();
   const { coordinates, setCoordinates, visibleData, loading, error, refetch } = useHomeContext();
 
+  const [draftCoordinates, setDraftCoordinates] = useState<Coordinates>(coordinates)
+
+  useEffect(() => {
+      setDraftCoordinates(coordinates);
+  }, [coordinates]);
+
   const handleCenterChange = (next: Coordinates) => {
-    setCoordinates(next);
+    setDraftCoordinates(next);
   };
+
+  const applyDraftLocation = () => {
+      setCoordinates(draftCoordinates);
+      refetch();
+  }
+
+  const hasPendingChange =
+    draftCoordinates.lat !== coordinates.lat ||
+    draftCoordinates.lon !== coordinates.lon ||
+    (draftCoordinates.elev2 ?? 0) !== (coordinates.elev2 ?? 0);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -37,10 +54,24 @@ export function HomeMapMinimized() {
             </p>
           </div>
           <MiniMap
-            coordinates={coordinates}
+            coordinates={draftCoordinates}
             onCenterChange={handleCenterChange}
             onEnterFullscreen={() => navigate('/home/map')}
           />
+          <div className ="flex justify-end">
+            <button
+                type="button"
+                onClick={applyDraftLocation}
+                disabled={!hasPendingChange || loading}
+                className={`rounded-full px-4 py-2 text-sm font-medium ${
+                                !hasPendingChange || loading
+                                  ? 'cursor-not-allowed bg-gray-600/60 text-gray-300'
+                                  : 'bg-indigo-500 text-white hover:bg-indigo-400'
+                              }`}
+                >
+                    {loading ? 'Updating…' : hasPendingChange ? 'Update location' : 'Location up to date'}
+                </button>
+            </div>
         </div>
       </main>
       <Footer />
