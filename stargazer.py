@@ -82,7 +82,7 @@ def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: dateti
 
     sun_alt_deg, _ = alt_az_simple(SUN, observer, t)
     cutoff = TWILIGHT_CUTOFFS.get(twilight, -18.0)
-    dark_enough = sun_alt_deg <= cutoff
+    dark_enough = float(sun_alt_deg) <= cutoff
 
     results: List[Dict] = []
     for name, body in PLANETS.items():
@@ -99,15 +99,15 @@ def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: dateti
 
     # Calculate visible constellations
     visible_constellations: List[Dict] = []
-    # for const in CONSTELLATIONS:
-    #     is_visible = is_constellation_visible(const['declination_deg'], lat) and dark_enough
-    #     visible_constellations.append({
-    #         'id': const['id'],
-    #         'name': const['name'],
-    #         'abbreviation': const['abbreviation'],
-    #         'visible': is_visible,
-    #         'magnitude': const['magnitude']
-    #     })
+    for const in CONSTELLATIONS:
+         is_visible = is_constellation_visible(const['declination_deg'], lat) and dark_enough
+         visible_constellations.append({
+             'id': const['id'],
+             'name': const['name'],
+             'abbreviation': const['abbreviation'],
+             'visible': is_visible,
+             'magnitude': const['magnitude']
+         })
 
     return {
         'when_utc': when_utc.isoformat(),
