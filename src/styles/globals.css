@@ -20,12 +20,57 @@
   --grid-gap: 24px;
 }
 
+
 body {
   @apply min-h-screen font-sans bg-background text-textPrimary antialiased;
-  background-image: radial-gradient(circle at 20% 20%, rgba(75, 123, 245, 0.25), transparent 60%),
+
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(75, 123, 245, 0.25), transparent 60%),
     radial-gradient(circle at 80% 10%, rgba(116, 173, 255, 0.2), transparent 60%),
     radial-gradient(circle at 50% 80%, rgba(86, 123, 255, 0.15), transparent 60%),
     linear-gradient(180deg, rgba(6, 9, 24, 0.9), rgba(3, 4, 12, 1));
+
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+
+  background-image:
+      radial-gradient(3px 3px at 10% 20%, rgba(255,255,255,1), transparent 60%),
+      radial-gradient(3px 3px at 30% 80%, rgba(255,255,255,1), transparent 60%),
+      radial-gradient(3px 3px at 70% 30%, rgba(255,255,255,1), transparent 60%),
+      radial-gradient(3px 3px at 90% 60%, rgba(255,255,255,1), transparent 60%),
+      radial-gradient(3px 3px at 50% 50%, rgba(255,255,255,1), transparent 60%),
+
+      
+      radial-gradient(1.7px 1.7px at 20% 10%, rgba(255,255,255,0.9), transparent 60%),
+      radial-gradient(1.7px 1.7px at 60% 90%, rgba(255,255,255,0.9), transparent 60%),
+      radial-gradient(1.7px 1.7px at 40% 60%, rgba(255,255,255,0.9), transparent 60%),
+
+      
+      radial-gradient(1px 1px at 15% 75%, rgba(255,255,255,0.8), transparent 60%),
+      radial-gradient(1px 1px at 85% 45%, rgba(255,255,255,0.8), transparent 60%);
+
+  background-size: 450px 450px;
+  opacity: 0.75;
+
+  filter:
+    drop-shadow(0 0 4px rgba(255,255,255,1))
+    drop-shadow(0 0 8px rgba(160,180,255,0.7))
+    drop-shadow(0 0 12px rgba(120,140,255,0.5));
+
+  /* Gentle floating motion */
+  animation: starShift 70s linear infinite;
+}
+
+@keyframes starShift {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-200px); }
 }
 
 a {
@@ -63,4 +108,3 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: brightness(200%);
   opacity: 0.75;
 }
-

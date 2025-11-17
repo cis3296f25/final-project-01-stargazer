@@ -4,11 +4,14 @@
 # Start:  python stargazer.py
 # Try:  http://127.0.0.1:5000/visible?lat=39.981&lon=-75.155&twilight=nautical
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Dict, List
 from flask import Flask, request, jsonify
-from skyfield.api import Loader, wgs84
+from skyfield.data import hipparcos
+from skyfield.api import Loader, wgs84, Star, load_constellation_map, load_constellation_names, position_of_radec
 from flask_cors import CORS
+
+from skyfield.api import Star
 
 
 load = Loader('~/skyfield-data')
@@ -30,21 +33,16 @@ PLANETS = {
     'Neptune': eph['neptune barycenter'],
 }
 
-# Constellation data: approximate center declination and brightest star magnitude
-CONSTELLATIONS = [
-    {'id': 'ori', 'name': 'Orion', 'abbreviation': 'Ori', 'declination_deg': 5.0, 'magnitude': 2.0},
-    {'id': 'uma', 'name': 'Ursa Major', 'abbreviation': 'UMa', 'declination_deg': 55.0, 'magnitude': 1.9},
-    {'id': 'umi', 'name': 'Ursa Minor', 'abbreviation': 'UMi', 'declination_deg': 75.0, 'magnitude': 2.2},
-    {'id': 'cas', 'name': 'Cassiopeia', 'abbreviation': 'Cas', 'declination_deg': 60.0, 'magnitude': 2.4},
-    {'id': 'lyr', 'name': 'Lyra', 'abbreviation': 'Lyr', 'declination_deg': 38.0, 'magnitude': 0.0},
-    {'id': 'cyg', 'name': 'Cygnus', 'abbreviation': 'Cyg', 'declination_deg': 45.0, 'magnitude': 1.3},
-    {'id': 'sco', 'name': 'Scorpius', 'abbreviation': 'Sco', 'declination_deg': -25.0, 'magnitude': 1.6},
-    {'id': 'leo', 'name': 'Leo', 'abbreviation': 'Leo', 'declination_deg': 15.0, 'magnitude': 1.4},
-    {'id': 'vir', 'name': 'Virgo', 'abbreviation': 'Vir', 'declination_deg': -5.0, 'magnitude': 3.0},
-    {'id': 'taur', 'name': 'Taurus', 'abbreviation': 'Tau', 'declination_deg': 15.0, 'magnitude': 1.5},
-    {'id': 'and', 'name': 'Andromeda', 'abbreviation': 'And', 'declination_deg': 40.0, 'magnitude': 2.9},
-    {'id': 'psa', 'name': 'Piscis Austrinus', 'abbreviation': 'PsA', 'declination_deg': -30.0, 'magnitude': 1.1}
-]
+#load bright stars from the hipparcos catalog
+with load.open(hipparcos.URL) as f:
+    HIP_STARS = hipparcos.load_dataframe(f)
+
+#limit to reasonably bright stars
+BRIGHT_STARS = HIP_STARS[HIP_STARS['magnitude'] <= 3.5]
+
+#preload constellation lookup function
+CONSTELLATION_AT = load_constellation_map()
+CONSTELLATION_NAMES = dict(load_constellation_names())
 
 TWILIGHT_CUTOFFS = {
     'civil': -6.0,
@@ -64,16 +62,82 @@ def moon_phase_fraction(t) -> float:
     #return (1 + cos(phase_angle)) / 2.0 old
     return (1 - cos(phase_angle)) / 2.0 #new. moon phase fraction: 0=new, 1=full. full expects 1.0
 
+#use bright stars to determine constellation visibility
+#aggregate by constellation and keep the brightest visible star as a representative
 
+def visible_constellations_for(observer, t, dark_enough: bool, mag_limit: float = 3.0) -> List[Dict]:
+    #no constellations visible if not dark enough
+    if not dark_enough:
+        return []
+    
+    #filter for dynamically tweaking mag limit (lower magnitude = brighter star)
+    stars = BRIGHT_STARS[BRIGHT_STARS['magnitude'] <= mag_limit]
 
-def is_constellation_visible(declination_deg: float, observer_lat: float) -> bool:
-    """Check if a constellation is potentially visible based on declination and observer latitude."""
-    # A constellation is visible if its declination is within the observer's visible sky
-    # Simplified: constellation is visible if it can rise above horizon
-    # For northern hemisphere: declination > (90 - latitude) means circumpolar
-    # For southern hemisphere: declination < -(90 - abs(latitude)) means circumpolar
-    # For general case: if abs(declination - observer_lat) < 90, it can be visible
-    return abs(declination_deg - observer_lat) < 90
+    #build a list of star objects
+    #converting DataFrame to Star vector
+    star_vector = Star.from_dataframe(stars)
+
+    #compute astrometric (geometric) positions of all stars as seen from the observer's location at time t
+    astrometric = observer.at(t).observe(star_vector)
+    #convert geometric position to apparent position (accounting for refraction etc.)
+    apparent = astrometric.apparent()
+
+    #get altitude (degrees above horizon) and azimuth (degrees from North)
+    #also get RA/Dec for celestial coordinates
+    alt, az, _ = apparent.altaz()
+    ra, dec, _ = apparent.radec()
+
+    #convert Skyfield angle objects to raw degree arrays
+    alt_deg = alt.degrees
+    az_deg = az.degrees
+
+    #visible = above horizon
+    visible_mask = alt_deg > 0
+
+    if not visible_mask.any():
+        return []
+    
+    #apply mask
+    visible_stars = stars[visible_mask]
+    vis_alt = alt_deg[visible_mask]
+    vis_az = az_deg[visible_mask]
+    vis_ra_hours = ra.hours[visible_mask]       #needed for skyfields constellation lookup
+    vis_dec_deg = dec.degrees[visible_mask]
+
+    constellations_map = {}
+
+    #loop over each visible star and its computed alt/az and ra/dec
+    for(hip_id, star_row), alt_d, az_d, ra_h, dec_d in zip(
+        visible_stars.iterrows(), vis_alt, vis_az, vis_ra_hours, vis_dec_deg
+    ):
+        #build a position from RA/Dec so we can ask which constellation it's in
+        pos = position_of_radec(ra_h, dec_d)
+
+        #load_constellation_map() returns the constellation abbreviation (e.g., "Ori")
+        const_abbr = CONSTELLATION_AT(pos)
+
+        #map abbreviation -> full name (fallback to abbr if not found for some reason)
+        const_name = CONSTELLATION_NAMES.get(const_abbr, const_abbr)
+
+        mag = star_row['magnitude']
+
+        #keep the brightest star (smallest magnitude) as representative
+        if const_abbr not in constellations_map or mag < constellations_map[const_abbr]['magnitude']:
+            constellations_map[const_abbr] = {
+                'id': const_abbr.lower(),
+                'name': const_name,
+                'abbreviation': const_abbr,
+                'magnitude': mag,
+                'altitude_deg': round(float(alt_d), 2),
+                'azimuth_deg': round(float(az_d), 2)
+            }
+    #convert map to list and sort by altitude (highest first)
+    visible_constellations = sorted(
+        constellations_map.values(),
+        key=lambda c: -c['altitude_deg']
+    )
+
+    return visible_constellations
 
 
 def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: datetime, twilight: str) -> Dict:
@@ -98,16 +162,7 @@ def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: dateti
     moon_illum = moon_phase_fraction(t)
 
     # Calculate visible constellations
-    visible_constellations: List[Dict] = []
-    # for const in CONSTELLATIONS:
-    #     is_visible = is_constellation_visible(const['declination_deg'], lat) and dark_enough
-    #     visible_constellations.append({
-    #         'id': const['id'],
-    #         'name': const['name'],
-    #         'abbreviation': const['abbreviation'],
-    #         'visible': is_visible,
-    #         'magnitude': const['magnitude']
-    #     })
+    visible_constellations = visible_constellations_for(observer, t, dark_enough)
 
     return {
         'when_utc': when_utc.isoformat(),
