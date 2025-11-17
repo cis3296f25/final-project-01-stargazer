@@ -40,14 +40,30 @@ Built with modern web technologies for performance and clarity, Star Gazer aims 
    VITE_API_BASE_URL=http://localhost:5000
    ```
    `VITE_API_BASE_URL` is optional—when omitted the dev server proxies `/api` to `http://localhost:5000`.
+   
+   **How to get a Google Maps API key:**
+   1. Visit the Google Cloud Console: https://console.cloud.google.com/
+   2. Create or select a project.
+   3. Go to **APIs & Services → Library** and enable:
+      - **Maps JavaScript API**
+      - (Optional) Places API, Geocoding API, Elevation API
+   4. Go to **APIs & Services → Credentials** → **Create Credentials → API Key**.
+   5. Copy the key and restrict it:
+      - Under **Application restrictions**: choose “HTTP referrers (websites)”.
+      - Add:  
+        `http://localhost:5173/*`  
+        (and your production domain, if any)
+      - Under **API restrictions**: restrict to Maps JavaScript API.
+   6. Paste the key into `.env` as `VITE_GOOGLE_MAPS_API_KEY=...`.
 
-4. **Start the flask backend**
+
+5. **Start the flask backend**
    On a separate terminal in the same directory
    ```
    python stargazer.py
    ```
 
-5. **Start the dev server**
+6. **Start the dev server**
    ```bash
    npm run dev
    ```
