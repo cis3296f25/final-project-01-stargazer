@@ -6,6 +6,7 @@ import { MiniMap } from '../components/MiniMap';
 import { Footer } from '../components/Footer';
 import { useHomeContext } from '../context/HomeContext';
 import type { Coordinates } from '../lib/map';
+import ShootingStars from '../components/ShootingStars';
 
 export function HomeMapMinimized() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export function HomeMapMinimized() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <ShootingStars />
       <Navbar onRefresh={refetch} />
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-6 py-10 lg:flex-row">
         <div className="w-full lg:max-w-xl">

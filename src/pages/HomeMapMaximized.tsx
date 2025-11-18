@@ -4,6 +4,7 @@ import { Navbar } from '../components/Navbar';
 import { FullscreenMap } from '../components/FullscreenMap';
 import { InfoPanel } from '../components/InfoPanel';
 import { useHomeContext } from '../context/HomeContext';
+import ShootingStars from '../components/ShootingStars';
 import type { Coordinates } from '../lib/map';
 
 export function HomeMapMaximized() {
@@ -32,6 +33,7 @@ export function HomeMapMaximized() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <ShootingStars />
       <Navbar onRefresh={refetch} />
       <main className="flex flex-1 flex-col gap-6 px-6 py-6 lg:flex-row">
         <div className="h-[60vh] w-full flex-1 overflow-hidden rounded-[32px] lg:h-auto">
