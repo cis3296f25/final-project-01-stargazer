@@ -30,7 +30,7 @@ export function HomeMapMinimized() {
   const hasPendingChange =
     draftCoordinates.lat !== coordinates.lat ||
     draftCoordinates.lon !== coordinates.lon ||
-    (draftCoordinates.elev2 ?? 0) !== (coordinates.elev2 ?? 0);
+    (draftCoordinates.elev ?? 0) !== (coordinates.elev ?? 0);
 
   return (
     <div className="flex min-h-screen flex-col">

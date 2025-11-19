@@ -38,7 +38,7 @@ export default function ShootingStars() {
       };
       stars.push(star);
 
-      setTimeout(createStar, 1200 + Math.random() * 3000);
+      setTimeout(createStar, 6000 + Math.random() * 6000);
     }
 
     function drawStar(star: Star) {
