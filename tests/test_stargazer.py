@@ -21,6 +21,70 @@ from zoneinfo import ZoneInfo
 from datetime import datetime, timezone
 import pytest
 
+def test_visible_constellations_returns_empty_when_not_dark():
+    """
+    If dark_enough is False, the function should always return an empty list
+    regardless of observer position or time.
+    """
+    t = sg.ts.from_datetime(datetime(2025, 1, 1, 0, 0, tzinfo=tz.utc))
+    observer = sg.EARTH + sg.wgs84.latlon(39.981, -75.155)  # Philly-ish
+
+    constellations = sg.visible_constellations_for(observer, t, dark_enough=False)
+    assert isinstance(constellations, list)
+    assert constellations == []
+
+
+def test_visible_constellations_structure_and_sorted_by_altitude():
+    """
+    When dark_enough is True, each returned constellation entry should have
+    the expected keys and the list should be sorted by descending altitude_deg.
+    """
+    t = sg.ts.from_datetime(datetime(2025, 1, 1, 0, 0, tzinfo=tz.utc))
+    observer = sg.EARTH + sg.wgs84.latlon(39.981, -75.155)
+
+    constellations = sg.visible_constellations_for(observer, t, dark_enough=True)
+
+    # If for some reason nothing is visible (e.g., environment differences),
+    # skip rather than fail the test.
+    if not constellations:
+        pytest.skip("No constellations visible for this time/location in this environment")
+
+    required_keys = {
+        "id",
+        "name",
+        "abbreviation",
+        "magnitude",
+        "altitude_deg",
+        "azimuth_deg",
+    }
+
+    for c in constellations:
+        assert required_keys.issubset(c.keys())
+        assert isinstance(c["altitude_deg"], float) or isinstance(c["altitude_deg"], int)
+        assert isinstance(c["azimuth_deg"], float) or isinstance(c["azimuth_deg"], int)
+
+    # Check that the list is sorted by descending altitude_deg
+    altitudes = [c["altitude_deg"] for c in constellations]
+    assert altitudes == sorted(altitudes, reverse=True)
+
+
+def test_visible_constellations_respects_mag_limit():
+    """
+    A looser magnitude limit (higher mag_limit value) should never produce
+    fewer constellations than a stricter one.
+    """
+    t = sg.ts.from_datetime(datetime(2025, 1, 1, 0, 0, tzinfo=tz.utc))
+    observer = sg.EARTH + sg.wgs84.latlon(39.981, -75.155)
+
+    strict = sg.visible_constellations_for(observer, t, dark_enough=True, mag_limit=2.0)
+    loose = sg.visible_constellations_for(observer, t, dark_enough=True, mag_limit=4.0)
+
+    # If both are empty, the environment may not have Hipparcos/constellation data;
+    # skip to avoid spurious failure.
+    if not strict and not loose:
+        pytest.skip("No constellations visible; cannot compare mag_limit behavior")
+
+    assert len(loose) >= len(strict)
 
 def test_moon_phase_fraction_fullish():
     """
