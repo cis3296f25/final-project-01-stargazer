@@ -7,7 +7,13 @@ The app provides:
 📱 Educational and personal use – perfect for astronomy enthusiasts, students, or anyone interested in the connection between the stars and human experience.
 Built with modern web technologies for performance and clarity, Star Gazer aims to make stargazing accessible, visual, and meaningful — all from your browser.
 
-## How to run
+## Hosted Link
+   Stargazer uses Vercel to host the frontend and Render.com to host the backend
+   Vercel Link:
+   ```
+   https://final-project-01-stargazer.vercel.app/
+   ```
+## How to run locally
 
 0. **Clone this repo into a directory**
 
@@ -99,6 +105,7 @@ pytest -v
 ## Folder Structure
 
 ```
+backend/
 src/
   components/     # Reusable UI building blocks (maps, cards, navbar, etc.)
   context/        # React context for shared location + visibility state
