@@ -180,6 +180,8 @@ def visible_planets(lat: float, lon: float, elevation_m: float, when_utc: dateti
 
 app = Flask(__name__)
 
+#Used for local development with frontend running on different port
+#CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=False)
 CORS(app)
 
 @app.get("/visible")
