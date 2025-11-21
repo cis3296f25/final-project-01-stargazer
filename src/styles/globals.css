@@ -20,6 +20,10 @@
   --grid-gap: 24px;
 }
 
+html {
+  @apply min-h-screen;
+  background-color: var(--color-bacgkround);
+}
 
 body {
   @apply min-h-screen font-sans bg-background text-textPrimary antialiased;
@@ -35,7 +39,7 @@ body {
 
 body::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: -1;

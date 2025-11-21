@@ -4,6 +4,7 @@ import { LocationForm } from '../components/LocationForm';
 import { useHomeContext } from '../context/HomeContext';
 import { getBrowserGeolocation } from '../lib/geolocation';
 import { isoToLocalInput } from '../lib/format';
+import ShootingStars from '../components/ShootingStars';
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -27,6 +28,7 @@ export function LandingPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 py-16">
+      <ShootingStars />
       <div className="grid w-full max-w-6xl gap-12 lg:grid-cols-[1.1fr_1fr]">
         <div className="flex flex-col justify-center gap-8 text-white">
           <div className="flex flex-col gap-4">
