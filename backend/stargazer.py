@@ -6,11 +6,10 @@
 
 from datetime import datetime, timezone
 from typing import Dict, List
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from skyfield.data import hipparcos
 from skyfield.api import Loader, wgs84, Star, load_constellation_map, load_constellation_names, position_of_radec
 from flask_cors import CORS
-
 from skyfield.api import Star
 
 
@@ -202,6 +201,11 @@ def api_visible():
 
     data = visible_planets(lat, lon, elev, when_utc, twilight)
     return jsonify(data)
+
+@app.route("/tiles/<int:z>/<int:x>/<int:y>.png")
+def get_tile(z, x, y):
+    path = f"tiles/{z}/{x}/{y}.png"
+    return send_file(path, mimetype="image/png")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
