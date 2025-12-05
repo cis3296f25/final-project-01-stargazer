@@ -29,7 +29,7 @@ export function FullscreenMap({ coordinates, onCenterChange }: FullscreenMapProp
       lastNotifiedCenter.current = center;
 
       // ⭐ LIGHT POLLUTION TILE OVERLAY
-      const TILE_URL = "http://localhost:5000/tiles/{z}/{x}/{y}.png";
+      const TILE_URL = "https://final-project-01-stargazer.onrender.com/tiles/{z}/{x}/{y}.png";
 
       const tileLayer = new google.maps.ImageMapType({
         getTileUrl: (coord, zoom) => {
