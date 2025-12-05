@@ -5,9 +5,10 @@ import type { Coordinates } from "../lib/map";
 interface FullscreenMapProps {
   coordinates: Coordinates;
   onCenterChange?: (coords: Coordinates) => void;
+  showPollution: boolean;
 }
 
-export function FullscreenMap({ coordinates, onCenterChange }: FullscreenMapProps) {
+export function FullscreenMap({ coordinates, onCenterChange, showPollution }: FullscreenMapProps) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const lastNotifiedCenter = useRef<{ lat: number; lng: number } | null>(null);
 
@@ -28,6 +29,9 @@ export function FullscreenMap({ coordinates, onCenterChange }: FullscreenMapProp
       mapRef.current = map;
       lastNotifiedCenter.current = center;
 
+    map.overlayMapTypes.clear;
+
+    if(showPollution){
       // ⭐ LIGHT POLLUTION TILE OVERLAY
       const TILE_URL = "https://final-project-01-stargazer.onrender.com/tiles/{z}/{x}/{y}.png";
 
@@ -49,6 +53,7 @@ export function FullscreenMap({ coordinates, onCenterChange }: FullscreenMapProp
       });
 
       map.overlayMapTypes.push(tileLayer);
+    }
     },
     [center]
   );
