@@ -39,3 +39,9 @@ images.png
 
 # Vite cache
 .vite/
+
+# light pollution source file
+backend/lit_mask.tif
+
+# generated tiles
+backend/tiles/

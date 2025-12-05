@@ -7,20 +7,26 @@ interface FullscreenMapProps {
   onCenterChange?: (coords: Coordinates) => void;
 }
 
+const TILE_URL_TEMPLATE =
+  "http://localhost:5000/tiles/{z}/{x}/{y}.png";
+
+// Your tiles are generated for zoom 0–7
+const MIN_TILE_ZOOM = 0;
+const MAX_TILE_ZOOM = 7;
+
 export function FullscreenMap({ coordinates, onCenterChange }: FullscreenMapProps) {
   const mapRef = useRef<google.maps.Map | null>(null);
   const lastNotifiedCenter = useRef<{ lat: number; lng: number } | null>(null);
+  const overlayRef = useRef<google.maps.ImageMapType | null>(null);
 
   const center = useMemo(
     () => ({ lat: coordinates.lat, lng: coordinates.lon }),
     [coordinates.lat, coordinates.lon]
   );
 
-  // ⭐ IMPORTANT: NO visualization library, NO changing the loader options
   const { isLoaded, loadError } = useJsApiLoader({
     id: "stargazer-map",
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? "",
-
   });
 
   const handleOnLoad = useCallback(
@@ -28,27 +34,34 @@ export function FullscreenMap({ coordinates, onCenterChange }: FullscreenMapProp
       mapRef.current = map;
       lastNotifiedCenter.current = center;
 
-      // ⭐ LIGHT POLLUTION TILE OVERLAY
-      const TILE_URL = "https://final-project-01-stargazer.onrender.com/tiles/{z}/{x}/{y}.png";
+      // Create the overlay once, reuse it across map instances
+      if (!overlayRef.current) {
+        overlayRef.current = new google.maps.ImageMapType({
+          name: "Light Pollution",
+          tileSize: new google.maps.Size(256, 256),
+          opacity: 0.6, // full for debugging; lower later if you want
+          getTileUrl: (coord, zoom) => {
+            if (zoom < MIN_TILE_ZOOM || zoom > MAX_TILE_ZOOM) {
+              return "";
+            }
 
-      const tileLayer = new google.maps.ImageMapType({
-        getTileUrl: (coord, zoom) => {
-          const max = 1 << zoom;
-          const x = ((coord.x % max) + max) % max;
+            const max = 1 << zoom;
+            const x = ((coord.x % max) + max) % max; // wrap X
+            if (coord.y < 0 || coord.y >= max) return ""; // clamp Y
 
-          if (coord.y < 0 || coord.y >= max) return "";
-          
-          return TILE_URL
-            .replace("{z}", zoom.toString())
-            .replace("{x}", x.toString())
-            .replace("{y}", coord.y.toString());
-        },
-        tileSize: new google.maps.Size(256, 256),
-        opacity: 0.75,
-        name: "Light Pollution"
-      });
+            const url = TILE_URL_TEMPLATE
+              .replace("{z}", zoom.toString())
+              .replace("{x}", x.toString())
+              .replace("{y}", coord.y.toString());
 
-      map.overlayMapTypes.push(tileLayer);
+            console.log("Tile request:", zoom, coord.x, coord.y, "->", url);
+            return url;
+          },
+        });
+      }
+
+      // ⭐ ALWAYS attach the overlay to the current map
+      map.overlayMapTypes.push(overlayRef.current);
     },
     [center]
   );
@@ -62,19 +75,32 @@ export function FullscreenMap({ coordinates, onCenterChange }: FullscreenMapProp
     const next = { lat: mapCenter.lat(), lng: mapCenter.lng() };
     const prev = lastNotifiedCenter.current;
 
-    if (!prev ||
-        Math.abs(prev.lat - next.lat) > 0.0005 ||
-        Math.abs(prev.lng - next.lng) > 0.0005) {
+    if (
+      !prev ||
+      Math.abs(prev.lat - next.lat) > 0.0005 ||
+      Math.abs(prev.lng - next.lng) > 0.0005
+    ) {
       lastNotifiedCenter.current = next;
       onCenterChange({
         lat: next.lat,
         lon: next.lng,
-        elev: coordinates.elev ?? 0
+        elev: coordinates.elev ?? 0,
       });
     }
   }, [onCenterChange, coordinates.elev]);
 
-  // 🚫 NO HOOKS BELOW THIS POINT — ONLY RETURNS
+  const handleOnUnmount = useCallback(() => {
+    if (mapRef.current && overlayRef.current) {
+      const overlayArray = mapRef.current.overlayMapTypes.getArray();
+      const idx = overlayArray.indexOf(overlayRef.current);
+
+      if (idx !== -1) {
+        mapRef.current.overlayMapTypes.removeAt(idx);
+      }
+    }
+
+    mapRef.current = null;
+  }, []);
 
   if (loadError) {
     return (
@@ -102,10 +128,11 @@ export function FullscreenMap({ coordinates, onCenterChange }: FullscreenMapProp
         mapTypeControl: false,
         streetViewControl: false,
         fullscreenControl: false,
-        gestureHandling: "greedy"
+        gestureHandling: "greedy",
       }}
       onLoad={handleOnLoad}
       onIdle={handleOnIdle}
+      onUnmount={handleOnUnmount}
     >
       <Marker position={center} />
     </GoogleMap>
