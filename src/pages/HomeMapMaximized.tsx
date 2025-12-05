@@ -13,6 +13,8 @@ export function HomeMapMaximized() {
 
   const [draftCoordinates, setDraftCoordinates] = useState<Coordinates>(coordinates)
 
+  const [showPollution, setShowPollution] = useState(true);
+
     useEffect(() => {
         setDraftCoordinates(coordinates);
     }, [coordinates]);
@@ -37,7 +39,15 @@ export function HomeMapMaximized() {
       <Navbar onRefresh={refetch} />
       <main className="flex flex-1 flex-col gap-6 px-6 py-6 lg:flex-row">
         <div className="h-[60vh] w-full flex-1 overflow-hidden rounded-[32px] lg:h-auto">
-          <FullscreenMap coordinates={draftCoordinates} onCenterChange={handleCenterChange} />
+          <div className="mb-2 flex justify-end">
+            <button
+              onClick={() => setShowPollution((prev) => !prev)}
+              className="rounded-xl px-4 py-2 text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-500 shadow"
+            >
+              {showPollution ? "Hide Light Pollution" : "Show Light Pollution"}
+            </button>
+          </div>
+          <FullscreenMap coordinates={draftCoordinates} onCenterChange={handleCenterChange} showPollution={showPollution}/>
         </div>
         <div className="flex flex-col gap-4">
                   <InfoPanel
