@@ -4,6 +4,7 @@
 # Start:  python stargazer.py
 # Try:  http://127.0.0.1:5000/visible?lat=39.981&lon=-75.155&twilight=nautical
 
+import os
 from datetime import datetime, timezone
 from typing import Dict, List
 from flask import Flask, request, jsonify, send_file
@@ -205,7 +206,10 @@ def api_visible():
 @app.route("/tiles/<int:z>/<int:x>/<int:y>.png")
 def get_tile(z, x, y):
     path = f"tiles/{z}/{x}/{y}.png"
+    if not os.path.exists(path):
+        return "Tile not found", 404
     return send_file(path, mimetype="image/png")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
